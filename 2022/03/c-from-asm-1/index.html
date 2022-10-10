@@ -1,0 +1,355 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>从汇编角度看C语言 - 1 | 计算机协会博客园</title><meta name="keywords" content="C,汇编,逆向"><meta name="author" content="计算机协会"><meta name="copyright" content="计算机协会"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="反汇编C语言程序的解读。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从汇编角度看C语言 - 1">
+<meta property="og:url" content="https://nbtca.space/2022/03/c-from-asm-1/index.html">
+<meta property="og:site_name" content="计算机协会博客园">
+<meta property="og:description" content="反汇编C语言程序的解读。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://oss.chundot.xyz/picgo/assembly.jpeg">
+<meta property="article:published_time" content="2022-03-27T13:38:45.000Z">
+<meta property="article:modified_time" content="2022-10-10T05:21:57.248Z">
+<meta property="article:author" content="计算机协会">
+<meta property="article:tag" content="C">
+<meta property="article:tag" content="汇编">
+<meta property="article:tag" content="逆向">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://oss.chundot.xyz/picgo/assembly.jpeg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://nbtca.space/2022/03/c-from-asm-1/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/6.1.1/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="/js/fancyapps/fancybox.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"search.xml","languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"prismjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '从汇编角度看C语言 - 1',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2022-10-10 13:21:57'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.0.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220321193738932.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">14</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" target="_blank" rel="noopener" href="https://jolanyu.github.io/repairteam/"><i class="fa-fw fa-solid fa-screwdriver"></i><span> 理工维修日</span></a></div><div class="menus_item"><a class="site-page" target="_blank" rel="noopener" href="https://github.com/chundot/nbtca-blog"><i class="fa-fw fab fa-github"></i><span> 项目地址</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://oss.chundot.xyz/picgo/assembly.jpeg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">计算机协会博客园</a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" target="_blank" rel="noopener" href="https://jolanyu.github.io/repairteam/"><i class="fa-fw fa-solid fa-screwdriver"></i><span> 理工维修日</span></a></div><div class="menus_item"><a class="site-page" target="_blank" rel="noopener" href="https://github.com/chundot/nbtca-blog"><i class="fa-fw fab fa-github"></i><span> 项目地址</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">从汇编角度看C语言 - 1</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-03-27T13:38:45.000Z" title="发表于 2022-03-27 21:38:45">2022-03-27</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2022-10-10T05:21:57.248Z" title="更新于 2022-10-10 13:21:57">2022-10-10</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E9%80%86%E5%90%91/">逆向</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="从汇编角度看C语言 - 1"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="从汇编角度看C语言-1"><a href="#从汇编角度看C语言-1" class="headerlink" title="从汇编角度看C语言 - 1"></a>从汇编角度看C语言 - 1</h1><h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><blockquote>
+<p>参考书目: 《加密与解密》</p>
+</blockquote>
+<ul>
+<li>系统平台: Windows 10；</li>
+<li>调试工具: OllyDBG (吾爱破解专版) ；</li>
+<li>开发工具: Visual Studio 2008  Debug模式；</li>
+<li>基础要求: 了解C语言和汇编语言；</li>
+<li>大致内容: 简述了一些汇编语言与C语言的关系，方便初学者更好的认识程序的底层运行机制。</li>
+</ul>
+<h2 id="开始"><a href="#开始" class="headerlink" title="开始"></a>开始</h2><p>用VS2008编译如下代码：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h></span></span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">int</span> argc<span class="token punctuation">,</span><span class="token keyword">char</span><span class="token operator">*</span> argv<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+	<span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"Hello World\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p> 将生成的<strong>可执行文件</strong>拖入<strong>OllyDBG</strong>。</p>
+<h2 id="如何寻找C程序入口？"><a href="#如何寻找C程序入口？" class="headerlink" title="如何寻找C程序入口？"></a>如何寻找C程序入口？</h2><p>明确两点：</p>
+<ol>
+<li>mainCRTStartup和wmainCRTStartup是控制台环境下多字节编码和Unicode编码的启动函数；</li>
+<li>WinMainCRTStartup和wWinMainCRTStartup是windows环境下多字节编码和Unicode编码的启动函数。</li>
+</ol>
+<p>mainCRTStartup做了哪些事？</p>
+<p>如何通过mainCRTStartup来找到main函数入口？</p>
+<p>以上述程序为例，寻找其<code>main</code>函数入口。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327214647589.png" alt="image-20220327214647589"></p>
+<p>初步调试文件，可以发现许多<code>jmp</code>指令，这是编译器生成的启动代码，往下按F8跟随跳转。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327214714185.png" alt="image-20220327214714185"></p>
+<p>连续按<code>F8</code>来到<code>call tmainCRTStartuptringtionFilter</code>再一次按<code>F8</code>后，整个程序就会返回，因此按<code>F7</code>单步进入该函数。</p>
+<p>接下来连续按下<code>F8</code>，并且观察控制台输出：</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327214738686.png" alt="image-20220327214738686"></p>
+<p>发现再<code>call hello.00241140</code>后控制台打出Hello World，因此在此处设下断点。</p>
+<p>按下<code>Ctrl+F2</code>后重新启动程序，按下<code>F9</code>运行到该断点，按下<code>F7</code>单步进入。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327214803763.png" alt="image-20220327214803763"></p>
+<p>按几次F8后看到如上界面，可以看到Hello World字符串，程序的开头即初始化栈帧操作，显然已经成功来到了main函数中。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327214826902.png" alt="image-20220327214826902"></p>
+<p>查看如上高亮的指令，该指令将“Hello World”字符串的首地址压入栈中，而后调用printf，将字符串打印在控制台上。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327215012755.png" alt="image-20220327215012755"></p>
+<p>事实也正是如此！</p>
+<h2 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h2><p>C语言程序是由具有不同功能的函数组成的，因此在逆向分析中应将重点放在函数的识别及参数的传递上，这样做可以将注意力集中在某一段代码上。</p>
+<h3 id="函数的识别"><a href="#函数的识别" class="headerlink" title="函数的识别"></a>函数的识别</h3><p>下面讨论<strong>函数的识别</strong>：</p>
+<p>调用函数的代码保存了一个返回地址，该地址会与参数一起传递给被调用的函数。绝大多数情况下编译器都使用call和ret指令来调用函数和返回调用位置。</p>
+<p>call指令与跳转指令功能类似，但call指令保存返回信息，这里的返回信息实际上主要就是返回地址。</p>
+<p>call指令执行时会将其之后的指令地址压入栈的顶部，当遇到ret指令时返回这个地址。</p>
+<p>也就是说，call指令给出的地址就是被调用函数的起始地址，ret指令用于结束函数的执行。</p>
+<p>因此可以通过定位call指令或ret指令来识别函数，call的操作数就是所调用函数的首地址。</p>
+<p>话不多说，看一个例子。</p>
+<p>用vs2008编译如下代码，使用OllyDBG进行调试：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h></span></span>
+
+<span class="token keyword">int</span> <span class="token function">add</span><span class="token punctuation">(</span><span class="token keyword">int</span> x<span class="token punctuation">,</span><span class="token keyword">int</span> y<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+	<span class="token keyword">return</span> x<span class="token operator">+</span>y<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">int</span> argc<span class="token punctuation">,</span><span class="token keyword">char</span><span class="token operator">*</span> argv<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+	<span class="token keyword">int</span> a <span class="token operator">=</span> <span class="token number">5</span><span class="token punctuation">,</span>b <span class="token operator">=</span> <span class="token number">6</span><span class="token punctuation">;</span>
+	<span class="token function">add</span><span class="token punctuation">(</span>a<span class="token punctuation">,</span>b<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+
+<p>进入OD后，依然要越过启动代码，寻找真正的<code>main</code>函数。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327220701475.png" alt="image-20220327220701475"></p>
+<p>连续按F8。</p>
+<p>按照以往的经验，调用<code>main</code>函数至少在调用<code>GetCommandLine</code>函数之后。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327220724315.png" alt="image-20220327220724315"></p>
+<p>于是这里继续往下执行。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327220810610.png" alt="image-20220327220810610"></p>
+<p>看到这里可以push了3个参数，发现argv和argc的字样，那么下一个call十有八九会到达<code>main</code>函数了。</p>
+<p>按F7单步进入。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327220839595.png" alt="image-20220327220839595"></p>
+<p>来到这里就已经很明显了，可以明显的看到下图中由<code>mov ..., 0x5</code>和<code>mov ..., 0x6</code>两个语句，这明显是在给变量赋值上5和6，那么就可以推测<code>call test.00DD135C</code>实际上在调用<code>add</code>函数，将光标移动指令处，按回车键。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327220903701.png" alt="image-20220327220903701"></p>
+<p>如下图可以看到<code>add</code>字样，因此猜想是对的。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327220934315.png" alt="image-20220327220934315"></p>
+<p>那么回到之前的<code>main</code>函数，可以看到代码将0x5和0x6放入rax和ecx寄存器后，又对其进行了压栈操作，实际等价于<code>push 0x5</code>和<code>push 0x6</code>。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327221004603.png" alt="image-20220327221004603"></p>
+<p>push操作就是x86架构下典型的压栈方式，符合**__cdecl**调用约定(C&#x2F;C++程序的默认调用约定，在此不作赘述)，在该约定下，可以看到压栈顺序是逆序的，右边的参数先进栈，左边的参数后进栈，栈顶指针esp指向栈中第1个可用的数据项。</p>
+<p>在调用函数时，调用者依次将参数压入栈，然后调用函数。函数被调用以后，在栈中取得数据并进行计算，函数计算结束后，由调用者或者函数本身修改栈，使栈恢复原样(平衡栈数据)。</p>
+<p>现在将程序运行到call指令之前，查看OD的栈区数据，可以看到显示Arg1&#x3D;5，Arg2&#x3D;6，显然这两个参数已经被压栈。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327221037201.png" alt="image-20220327221037201"></p>
+<p>进入add函数后，可以看到程序将arg1存入eax寄存器，再和arg2相加，就完成了计算。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327221100245.png" alt="image-20220327221100245"></p>
+<p>另外还有几种调用约定，如<strong>fastcall</strong>和<strong>stdcall</strong>。</p>
+<h3 id="函数的返回值"><a href="#函数的返回值" class="headerlink" title="函数的返回值"></a>函数的返回值</h3><p>再来讨论<strong>函数的返回值</strong>：</p>
+<p>将<code>add</code>函数修改一下，如下所示：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token keyword">int</span> <span class="token function">add</span><span class="token punctuation">(</span><span class="token keyword">int</span> x<span class="token punctuation">,</span><span class="token keyword">int</span> y<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+	<span class="token keyword">int</span> temp<span class="token punctuation">;</span>
+	temp <span class="token operator">=</span> x <span class="token operator">+</span> y<span class="token punctuation">;</span>
+	<span class="token keyword">return</span> temp<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>进入OD，再次回到add函数中。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327221142426.png" alt="image-20220327221142426"></p>
+<p><code>mov eax, [local.2]</code>是将计算的最后结果就保存在eax寄存器中，eax就作为存放返回值的寄存器。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327221206970.png" alt="image-20220327221206970"></p>
+<p>众所周知，带回返回值的方法不只<code>return</code>，还可传引用，查看如下代码：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h></span></span>
+
+<span class="token keyword">void</span> <span class="token function">max</span><span class="token punctuation">(</span><span class="token keyword">int</span><span class="token operator">*</span> a<span class="token punctuation">,</span><span class="token keyword">int</span><span class="token operator">*</span> b<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+	<span class="token keyword">if</span><span class="token punctuation">(</span><span class="token operator">*</span>a <span class="token operator">&lt;</span> <span class="token operator">*</span>b<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token operator">*</span>a <span class="token operator">=</span> <span class="token operator">*</span>b<span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">int</span> argc<span class="token punctuation">,</span><span class="token keyword">char</span><span class="token operator">*</span> argv<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+	<span class="token keyword">int</span> a <span class="token operator">=</span> <span class="token number">5</span><span class="token punctuation">,</span>b <span class="token operator">=</span> <span class="token number">6</span><span class="token punctuation">;</span>
+	<span class="token function">max</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>a<span class="token punctuation">,</span> <span class="token operator">&amp;</span>b<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"max: %d"</span><span class="token punctuation">,</span>a<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>这里定义了一个<code>max</code>函数，接收<code>a</code>和<code>b</code>的地址，将其中较大数放入变量<code>a</code>中。使用OD，进入<code>main</code>函数。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327220253195.png" alt="image-20220327220253195"></p>
+<p>进入<code>max</code>函数，<code>mov eax, [arg.1]</code>和<code>mov ecx, [arg.2]</code>是将参数<code>a</code>和<code>b</code>的值加载到两个寄存器。</p>
+<p>可以看到<code>cmp</code>指令，这是一个用于比较大小的指令，紧跟着的是条件跳转指令，表示如果a&lt;b则不跳转，继续往下执行，这里不多说。</p>
+<p>直接看到<code>mov dword ptr ds:[eax], edx</code>。<code>dword ptr</code>是指明数据宽度，而这一步操作就是将结果填入变量a所在的内存地址处。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327220315921.png" alt="image-20220327220315921"></p>
+<h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><h3 id="局部变量"><a href="#局部变量" class="headerlink" title="局部变量"></a>局部变量</h3><p>现在来谈谈局部变量。</p>
+<p><strong>局部变量</strong>是函数内部定义的一个变量，其作用域和生命周期局限于所在函数内。从汇编角度看，局部变量分配空间时通常会使用栈和寄存器。</p>
+<p>编译如下代码：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h></span></span>
+
+<span class="token keyword">int</span> <span class="token function">add</span><span class="token punctuation">(</span><span class="token keyword">int</span> x<span class="token punctuation">,</span><span class="token keyword">int</span> y<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+	<span class="token keyword">int</span> z<span class="token punctuation">;</span>
+	z <span class="token operator">=</span> x<span class="token operator">+</span>y<span class="token punctuation">;</span>
+	<span class="token keyword">return</span> z<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">void</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+	<span class="token keyword">int</span> a<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span>b<span class="token operator">=</span><span class="token number">6</span><span class="token punctuation">;</span>
+	<span class="token function">add</span><span class="token punctuation">(</span>a<span class="token punctuation">,</span>b<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>进入<code>add</code>函数，<code>sub esp,0xcc</code>即下降栈顶0xcc个字节，实际上是为局部变量开辟空间，同时也在预防栈溢出攻击(一种攻击手法，此处不作赘述)。</p>
+<p>这里开辟后的空间一部分是用来存放变量z的。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327220210074.png" alt="image-20220327220210074"></p>
+<p><code>call</code>调用完后，会出现<code>add esp,0x8</code>这步操作实际上是在平衡栈，可以理解为“回收现场”。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327220111908.png" alt="image-20220327220111908"></p>
+<p>局部变量的起始值是随机的，是其他函数执行后留在栈中的垃圾数据，因此须要对其进行初始化。</p>
+<h3 id="全局变量"><a href="#全局变量" class="headerlink" title="全局变量"></a>全局变量</h3><p>而<strong>全局变量</strong>作用于整个程序，它一直存在，放在全局变量的<strong>内存区</strong>中。</p>
+<p>局部变量则存在于函数的<strong>栈区</strong>中，函数<strong>调用结束后便会消失</strong>。</p>
+<p>在大多数程序中，<strong>常数</strong>一般放在全局变量中。</p>
+<p>全局变量通常位于数据区块(.data)的一个固定地址处，当程序要访问全局变量时，一般会用一个固定的硬编码地址直接对内存进行寻址。</p>
+<p>如下是示例程序，<code>z</code>是一个全局变量：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h></span></span>
+
+<span class="token keyword">int</span> z<span class="token punctuation">;</span>
+
+<span class="token keyword">int</span> <span class="token function">add</span><span class="token punctuation">(</span><span class="token keyword">int</span> x<span class="token punctuation">,</span><span class="token keyword">int</span> y<span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+	<span class="token keyword">return</span> x<span class="token operator">+</span>y<span class="token operator">+</span>z<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">void</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+	<span class="token keyword">int</span> a<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span>b<span class="token operator">=</span><span class="token number">6</span><span class="token punctuation">;</span>
+	z<span class="token operator">=</span><span class="token number">7</span><span class="token punctuation">;</span>
+	<span class="token function">add</span><span class="token punctuation">(</span>a<span class="token punctuation">,</span>b<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>这里是对z赋值，直接用<code>mov</code>将7写入一个固定的内存地址。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327220033227.png" alt="image-20220327220033227"></p>
+<p>在<code>add</code>函数中，同样直接从固定的地址中取出<code>z</code>的值到eax寄存器中。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327220014288.png" alt="image-20220327220014288"></p>
+<h3 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h3><p>最后看看<strong>数组</strong>：</p>
+<pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h></span></span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">void</span><span class="token punctuation">)</span>
+<span class="token punctuation">&#123;</span>
+	<span class="token keyword">static</span> <span class="token keyword">int</span> a<span class="token punctuation">[</span><span class="token number">3</span><span class="token punctuation">]</span><span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token number">0x11</span><span class="token punctuation">,</span><span class="token number">0x22</span><span class="token punctuation">,</span><span class="token number">0x33</span><span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+	<span class="token keyword">int</span> i<span class="token punctuation">,</span>s<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">,</span>b<span class="token punctuation">[</span><span class="token number">3</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+
+	<span class="token keyword">for</span><span class="token punctuation">(</span>i<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">;</span>i<span class="token operator">&lt;</span><span class="token number">3</span><span class="token punctuation">;</span>i<span class="token operator">++</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#123;</span>
+		s<span class="token operator">=</span>s<span class="token operator">+</span>a<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">;</span>
+		b<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token operator">=</span>s<span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+	<span class="token keyword">for</span><span class="token punctuation">(</span>i<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">;</span>i<span class="token operator">&lt;</span><span class="token number">3</span><span class="token punctuation">;</span>i<span class="token operator">++</span><span class="token punctuation">)</span>
+	<span class="token punctuation">&#123;</span>
+		<span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"%d\n"</span><span class="token punctuation">,</span>b<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>一般对数组的访问是通过基址加变址寻址实现的。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220327215920733.png" alt="image-20220327215920733"></p>
+<p>在内存中数组可存在于栈、数据段及动态内存中，本例中<code>a[]</code>数组就保存在数据段.data中，其寻址用“基址+偏移量”实现。</p>
+<p><code>b[]</code>数组放在栈中，这些栈在编译时分配。数组在声明时可以直接计算偏移地址，针对数组成员寻址时是采用实际的偏移量完成的。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="http://www.hwx666.com">N3ptune</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://nbtca.space/2022/03/c-from-asm-1/">https://nbtca.space/2022/03/c-from-asm-1/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://nbtca.space" target="_blank">计算机协会博客园</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/C/">C</a><a class="post-meta__tags" href="/tags/%E6%B1%87%E7%BC%96/">汇编</a><a class="post-meta__tags" href="/tags/%E9%80%86%E5%90%91/">逆向</a></div><div class="post_share"><div class="social-share" data-image="https://oss.chundot.xyz/picgo/assembly.jpeg" data-sites="wechat,weibo,qq"></div><link rel="stylesheet" href="/js/social-share/css/share.min.css" media="print" onload="this.media='all'"><script src="/js/social-share/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2022/03/reverse-practice/"><img class="prev-cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/20220330205540.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">逆向工程实战</div></div></a></div><div class="next-post pull-right"><a href="/2022/03/linux-note-file-io/"><img class="next-cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/20220320105749.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Linux笔记 - 文件I/O</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2022/03/reverse-practice/" title="逆向工程实战"><img class="cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/20220330205540.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-03-30</div><div class="title">逆向工程实战</div></div></a></div><div><a href="/2022/04/linux-note-signal/" title="Linux笔记 - 信号"><img class="cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/20220320105749.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-04-05</div><div class="title">Linux笔记 - 信号</div></div></a></div><div><a href="/2022/03/linux-note-file-io/" title="Linux笔记 - 文件I/O"><img class="cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/20220320105749.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-03-19</div><div class="title">Linux笔记 - 文件I/O</div></div></a></div><div><a href="/2022/04/linux-note-process/" title="Linux笔记 - 进程"><img class="cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/20220320105749.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-04-05</div><div class="title">Linux笔记 - 进程</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220321193738932.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">计算机协会</div><div class="author-info__description"></div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">14</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">7</div></a></div></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://jq.qq.com/?_wv=1027&amp;k=QZOHfw83"><i class="fa-brands fa-qq"></i><span>计协企鹅群 432399235</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content"><strong>桌面布局分享活动长期进行中!</strong>
+<br>
+各位可以分享下自己桌面的布局加之以一段简单的介绍和心得体会，我们会定期汇总投放在博客！
+<br>
+<strong>投递邮箱：chundot@foxmail.com</strong>
+</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BB%8E%E6%B1%87%E7%BC%96%E8%A7%92%E5%BA%A6%E7%9C%8BC%E8%AF%AD%E8%A8%80-1"><span class="toc-number">1.</span> <span class="toc-text">从汇编角度看C语言 - 1</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="toc-number">1.1.</span> <span class="toc-text">写在前面</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%80%E5%A7%8B"><span class="toc-number">1.2.</span> <span class="toc-text">开始</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E5%AF%BB%E6%89%BEC%E7%A8%8B%E5%BA%8F%E5%85%A5%E5%8F%A3%EF%BC%9F"><span class="toc-number">1.3.</span> <span class="toc-text">如何寻找C程序入口？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%87%BD%E6%95%B0"><span class="toc-number">1.4.</span> <span class="toc-text">函数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%87%BD%E6%95%B0%E7%9A%84%E8%AF%86%E5%88%AB"><span class="toc-number">1.4.1.</span> <span class="toc-text">函数的识别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%87%BD%E6%95%B0%E7%9A%84%E8%BF%94%E5%9B%9E%E5%80%BC"><span class="toc-number">1.4.2.</span> <span class="toc-text">函数的返回值</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-number">1.5.</span> <span class="toc-text">数据结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F"><span class="toc-number">1.5.1.</span> <span class="toc-text">局部变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F"><span class="toc-number">1.5.2.</span> <span class="toc-text">全局变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E7%BB%84"><span class="toc-number">1.5.3.</span> <span class="toc-text">数组</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2022/04/go-first-tutorial/" title="Go语言极限入门"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/image-20220419101405456.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Go语言极限入门"/></a><div class="content"><a class="title" href="/2022/04/go-first-tutorial/" title="Go语言极限入门">Go语言极限入门</a><time datetime="2022-04-19T02:11:26.000Z" title="发表于 2022-04-19 10:11:26">2022-04-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/04/python-spider-wzry-hero/" title="Python爬虫实战-获取王者荣耀英雄大全"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/data-mining.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Python爬虫实战-获取王者荣耀英雄大全"/></a><div class="content"><a class="title" href="/2022/04/python-spider-wzry-hero/" title="Python爬虫实战-获取王者荣耀英雄大全">Python爬虫实战-获取王者荣耀英雄大全</a><time datetime="2022-04-17T06:07:55.000Z" title="发表于 2022-04-17 14:07:55">2022-04-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/04/python-spider-tiobe-top/" title="Python爬虫实战 - 爬取TIOBE TOP20语言排行榜"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/data-mining.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Python爬虫实战 - 爬取TIOBE TOP20语言排行榜"/></a><div class="content"><a class="title" href="/2022/04/python-spider-tiobe-top/" title="Python爬虫实战 - 爬取TIOBE TOP20语言排行榜">Python爬虫实战 - 爬取TIOBE TOP20语言排行榜</a><time datetime="2022-04-05T05:14:13.000Z" title="发表于 2022-04-05 13:14:13">2022-04-05</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/04/linux-note-process/" title="Linux笔记 - 进程"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/20220320105749.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux笔记 - 进程"/></a><div class="content"><a class="title" href="/2022/04/linux-note-process/" title="Linux笔记 - 进程">Linux笔记 - 进程</a><time datetime="2022-04-05T05:13:35.000Z" title="发表于 2022-04-05 13:13:35">2022-04-05</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/04/linux-note-signal/" title="Linux笔记 - 信号"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/20220320105749.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux笔记 - 信号"/></a><div class="content"><a class="title" href="/2022/04/linux-note-signal/" title="Linux笔记 - 信号">Linux笔记 - 信号</a><time datetime="2022-04-05T05:13:28.000Z" title="发表于 2022-04-05 13:13:28">2022-04-05</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('https://oss.chundot.xyz/picgo/assembly.jpeg')"><div id="footer-wrap"><div class="copyright">&copy;2022 By 计算机协会</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text"><a target="_blank" rel="noopener" href="https://beian.miit.gov.cn/"><img class="icp-icon" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://oss.chundot.xyz/picgo/gongan.png"><span>浙ICP备2021030831号-2</span></a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">本地搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/fancyapps/fancybox.umd.js"></script><script src="/js/lazyload.js"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"></div><script defer="defer" id="ribbon" src="/js/extsrc/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="false"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
